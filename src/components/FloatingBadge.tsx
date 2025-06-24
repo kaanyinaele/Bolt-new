@@ -13,7 +13,7 @@ export const FloatingBadge: React.FC = () => {
         <img 
           src="/black_circle_360x360 copy.png" 
           alt="Built with Bolt.new" 
-          className="w-16 h-16 md:w-32 md:h-32 rounded-full"
+          className="w-36 h-36 md:w-32 md:h-32 rounded-full"
         />
       </a>
     </div>

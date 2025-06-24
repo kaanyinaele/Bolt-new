@@ -1,40 +1,17 @@
-export interface Invoice {
-  id: string;
-  amount: number;
-  currency: 'BTC' | 'ETH' | 'USDT' | 'USDC';
-  jobDescription: string;
-  walletAddress: string;
-  dueDate: string;
-  customNotes: string;
-  status: 'Pending Payment' | 'Paid';
-  createdAt: string;
-  fiatEquivalent: number;
-  recurringId?: string; // Links to recurring payment if applicable
-  isRecurring?: boolean;
-}
+// Represents the status of an invoice, aligned with the smart contract enum.
+export type InvoiceStatus = 'Created' | 'Funded' | 'Completed' | 'Cancelled';
 
-export interface RecurringPayment {
-  id: string;
+export interface Invoice {
+  id: string; // Corresponds to the smart contract address
   clientName: string;
   clientEmail: string;
+  jobDescription: string;
   amount: number;
   currency: 'BTC' | 'ETH' | 'USDT' | 'USDC';
-  jobDescription: string;
-  walletAddress: string;
-  frequency: 'weekly' | 'monthly' | 'quarterly' | 'yearly';
-  startDate: string;
-  endDate?: string; // Optional end date
+  walletAddress: string; // The recipient's wallet address
+  dueDate: string;
   customNotes: string;
-  status: 'Active' | 'Paused' | 'Cancelled';
+  status: InvoiceStatus;
   createdAt: string;
-  lastInvoiceDate?: string;
-  nextInvoiceDate: string;
-  totalInvoicesGenerated: number;
   fiatEquivalent: number;
-}
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
 }

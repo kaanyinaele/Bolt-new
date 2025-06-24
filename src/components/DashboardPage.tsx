@@ -1,37 +1,36 @@
 import React from 'react';
-import { Plus, Eye, CheckCircle, Clock, Coins, LogOut, Repeat, Calendar } from 'lucide-react';
+import { Plus, Eye, CheckCircle, Clock, Coins } from 'lucide-react';
 import { Invoice } from '../types/invoice';
-import { FloatingBadge } from './FloatingBadge';
-import { storage } from '../utils/storage';
 import { formatCurrency, formatFiat } from '../utils/crypto';
+import { FloatingBadge } from './FloatingBadge';
 
 interface DashboardPageProps {
   invoices: Invoice[];
   onCreateInvoice: () => void;
   onViewInvoice: (invoice: Invoice) => void;
-  onSimulatePayment: (invoiceId: string) => void;
-  onLogout: () => void;
-  onViewRecurringPayments: () => void;
+  account: string | null;
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({
   invoices,
   onCreateInvoice,
   onViewInvoice,
-  onSimulatePayment,
-  onLogout,
-  onViewRecurringPayments
+  account
 }) => {
-  const user = storage.getUser();
-  const recurringPayments = storage.getRecurringPayments();
-  
-  const totalPending = invoices.filter(inv => inv.status === 'Pending Payment').length;
-  const totalPaid = invoices.filter(inv => inv.status === 'Paid').length;
+  const totalFunded = invoices.filter(inv => inv.status === 'Funded').length;
+  const totalCompleted = invoices.filter(inv => inv.status === 'Completed').length;
   const totalValue = invoices.reduce((sum, inv) => sum + inv.fiatEquivalent, 0);
-  const activeRecurring = recurringPayments.filter(rp => rp.status === 'Active').length;
+
+  const truncateAddress = (address: string) => {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 relative">
+      <div className="fixed bottom-6 left-6 z-50">
+        <FloatingBadge />
+      </div>
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -41,193 +40,149 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">InvoiceFlow</h1>
-              <p className="text-sm text-gray-600">Welcome back, {user?.name}</p>
+              <p className="text-sm text-gray-600">Connected: {truncateAddress(account || '')}</p>
             </div>
           </div>
-          <button
-            onClick={onLogout}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <LogOut className="h-5 w-5" />
-            <span>Logout</span>
-          </button>
         </div>
       </header>
 
-      <div className="p-6 max-w-7xl mx-auto">
+      {/* Main Content */}
+      <main className="p-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Total Invoices</p>
-                <p className="text-2xl font-bold text-gray-900">{invoices.length}</p>
-              </div>
-              <div className="bg-blue-100 rounded-full p-3">
-                <Coins className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Pending Payment</p>
-                <p className="text-2xl font-bold text-amber-600">{totalPending}</p>
-              </div>
-              <div className="bg-amber-100 rounded-full p-3">
-                <Clock className="h-6 w-6 text-amber-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Total Value</p>
-                <p className="text-2xl font-bold text-green-600">{formatFiat(totalValue)}</p>
-              </div>
-              <div className="bg-green-100 rounded-full p-3">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Active Recurring</p>
-                <p className="text-2xl font-bold text-purple-600">{activeRecurring}</p>
-              </div>
-              <div className="bg-purple-100 rounded-full p-3">
-                <Repeat className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <StatCard icon={Clock} title="Funded Invoices" value={totalFunded} color="yellow" />
+          <StatCard icon={CheckCircle} title="Completed Invoices" value={totalCompleted} color="green" />
+          <StatCard icon={Coins} title="Total Value" value={formatFiat(totalValue)} color="blue" />
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-4 mb-6">
-          <button
-            onClick={onCreateInvoice}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors flex items-center space-x-2 shadow-lg"
-          >
-            <Plus className="h-5 w-5" />
-            <span>Create New Invoice</span>
-          </button>
-          
-          <button
-            onClick={onViewRecurringPayments}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors flex items-center space-x-2 shadow-lg"
-          >
-            <Repeat className="h-5 w-5" />
-            <span>Recurring Payments</span>
-          </button>
-        </div>
-
-        {/* Invoices Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Invoices</h2>
+        {/* Invoices Section */}
+        <div className="bg-white shadow-md rounded-lg">
+          <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+            <h2 className="text-lg font-semibold text-gray-800">Recent Invoices</h2>
+            <button
+              onClick={onCreateInvoice}
+              className="flex items-center space-x-2 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="h-5 w-5" />
+              <span>New Invoice</span>
+            </button>
           </div>
           
-          {invoices.length === 0 ? (
-            <div className="text-center py-12">
-              <Coins className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No invoices yet</h3>
-              <p className="text-gray-600 mb-6">Create your first crypto invoice to get started</p>
-              <button
-                onClick={onCreateInvoice}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-              >
-                Create Invoice
-              </button>
-            </div>
-          ) : (
+          {invoices.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Job Description</th>
-                    <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Amount</th>
-                    <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Due Date</th>
-                    <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Status</th>
-                    <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Type</th>
-                    <th className="text-left py-3 px-6 text-sm font-medium text-gray-600">Actions</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" className="relative px-6 py-3">
+                      <span className="sr-only">Actions</span>
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {invoices.map((invoice) => (
-                    <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="py-4 px-6">
-                        <div className="font-medium text-gray-900">{invoice.jobDescription}</div>
-                        <div className="text-sm text-gray-600">Invoice #{invoice.id.slice(-8)}</div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="font-medium text-gray-900">
-                          {formatCurrency(invoice.amount, invoice.currency)}
-                        </div>
-                        <div className="text-sm text-gray-600">{formatFiat(invoice.fiatEquivalent)}</div>
-                      </td>
-                      <td className="py-4 px-6 text-gray-600">
-                        {new Date(invoice.dueDate).toLocaleDateString()}
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          invoice.status === 'Paid' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {invoice.status === 'Paid' ? (
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                          ) : (
-                            <Clock className="h-3 w-3 mr-1" />
-                          )}
-                          {invoice.status}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        {invoice.isRecurring ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                            <Repeat className="h-3 w-3 mr-1" />
-                            Recurring
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            One-time
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() => onViewInvoice(invoice)}
-                            className="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-lg transition-colors"
-                            title="View Invoice"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          {invoice.status === 'Pending Payment' && (
-                            <button
-                              onClick={() => onSimulatePayment(invoice.id)}
-                              className="bg-green-100 hover:bg-green-200 text-green-700 p-2 rounded-lg transition-colors"
-                              title="Simulate Payment"
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {invoices.slice(0, 5).map(invoice => (
+                    <InvoiceRow 
+                      key={invoice.id} 
+                      invoice={invoice} 
+                      onViewInvoice={onViewInvoice} 
+                    />
                   ))}
                 </tbody>
               </table>
             </div>
+          ) : (
+            <div className="text-center p-8">
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No invoices</h3>
+              <p className="mt-1 text-sm text-gray-500">Get started by creating a new invoice.</p>
+              <div className="mt-6">
+                <button
+                  onClick={onCreateInvoice}
+                  type="button"
+                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <Plus className="-ml-1 mr-2 h-5 w-5" />
+                  New Invoice
+                </button>
+              </div>
+            </div>
           )}
         </div>
-      </div>
-
-      <FloatingBadge />
+      </main>
     </div>
+    
+  );
+};
+
+// StatCard Component
+interface StatCardProps {
+  icon: React.ElementType;
+  title: string;
+  value: string | number;
+  color: 'yellow' | 'green' | 'blue' | 'purple';
+  onClick?: () => void;
+}
+
+const StatCard: React.FC<StatCardProps> = ({ icon: Icon, title, value, color, onClick }) => {
+  const colors = {
+    yellow: 'bg-yellow-100 text-yellow-800',
+    green: 'bg-green-100 text-green-800',
+    blue: 'bg-blue-100 text-blue-800',
+    purple: 'bg-purple-100 text-purple-800',
+  };
+
+  const cursorClass = onClick ? 'cursor-pointer hover:shadow-lg' : '';
+
+  return (
+    <div className={`bg-white shadow-md rounded-lg p-5 flex items-center space-x-4 transition-shadow ${cursorClass}`} onClick={onClick}>
+      <div className={`rounded-full p-3 ${colors[color]}`}>
+        <Icon className="h-6 w-6" />
+      </div>
+      <div>
+        <p className="text-sm font-medium text-gray-500">{title}</p>
+        <p className="text-2xl font-bold text-gray-900">{value}</p>
+      </div>
+    </div>
+  );
+};
+
+// InvoiceRow Component
+interface InvoiceRowProps {
+  invoice: Invoice;
+  onViewInvoice: (invoice: Invoice) => void;
+}
+
+const InvoiceRow: React.FC<InvoiceRowProps> = ({ invoice, onViewInvoice }) => {
+  const statusClasses: { [key: string]: string } = {
+    'Created': 'bg-gray-100 text-gray-800',
+    'Funded': 'bg-yellow-100 text-yellow-800',
+    'Completed': 'bg-green-100 text-green-800',
+    'Cancelled': 'bg-red-100 text-red-800',
+  };
+
+  return (
+    <tr>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="text-sm font-medium text-gray-900">{invoice.clientName}</div>
+        <div className="text-sm text-gray-500">{invoice.clientEmail}</div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="text-sm text-gray-900">{formatCurrency(invoice.amount, invoice.currency)}</div>
+        <div className="text-sm text-gray-500">{formatFiat(invoice.fiatEquivalent)}</div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{invoice.dueDate}</td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses[invoice.status] || 'bg-gray-100 text-gray-800'}`}>
+          {invoice.status}
+        </span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <button onClick={() => onViewInvoice(invoice)} className="text-blue-600 hover:text-blue-900 mr-4">
+          <Eye className="h-5 w-5" />
+        </button>
+      </td>
+    </tr>
   );
 };
