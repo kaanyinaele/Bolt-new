@@ -19,14 +19,43 @@ export const CreateInvoicePage: React.FC<CreateInvoicePageProps> = ({ onBack, on
     customNotes: ''
   });
   // Network fee state
-  const [networkFee, setNetworkFee] = useState<{ eth: number; usd: number } | null>(null);
+  const [networkFee, setNetworkFee] = useState<import('../utils/crypto').NetworkFeeEstimate | null>(null);
   const [feeLoading, setFeeLoading] = useState<boolean>(true);
   const [feeError, setFeeError] = useState<string | null>(null);
-  // Fetch network fee estimate on mount
+
+  // USD price state for fiat equivalent
+  const [usdPrice, setUsdPrice] = useState<number | null>(null);
+  const [usdPriceLoading, setUsdPriceLoading] = useState<boolean>(true);
+  const [usdPriceError, setUsdPriceError] = useState<string | null>(null);
+
+  // Fetch USD price for selected currency
+  React.useEffect(() => {
+    let mounted = true;
+    setUsdPriceLoading(true);
+    setUsdPriceError(null);
+    import('../utils/crypto').then(utils => {
+      utils.fetchCryptoUsdPrice(formData.currency as 'BTC' | 'ETH' | 'USDT' | 'USDC' | 'MATIC')
+        .then(price => {
+          if (mounted) {
+            setUsdPrice(price);
+            setUsdPriceLoading(false);
+          }
+        })
+        .catch(() => {
+          if (mounted) {
+            setUsdPriceError('Failed to fetch USD price');
+            setUsdPriceLoading(false);
+          }
+        });
+    });
+    return () => { mounted = false; };
+  }, [formData.currency]);
+
+  // Fetch network fee estimate when currency changes
   React.useEffect(() => {
     let mounted = true;
     setFeeLoading(true);
-    fetchNetworkFeeEstimate()
+    fetchNetworkFeeEstimate(formData.currency as 'MATIC' | 'USDT' | 'USDC' | 'ETH', 'polygon')
       .then(fee => {
         if (mounted) {
           setNetworkFee(fee);
@@ -41,7 +70,7 @@ export const CreateInvoicePage: React.FC<CreateInvoicePageProps> = ({ onBack, on
         }
       });
     return () => { mounted = false; };
-  }, []);
+  }, [formData.currency]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -172,7 +201,15 @@ export const CreateInvoicePage: React.FC<CreateInvoicePageProps> = ({ onBack, on
                       </p>
                     )}
                     <div className="mt-2 text-xs text-gray-400">
-                      ≈ {formData.amount ? formatFiat(parseFloat(formData.amount) * 1800) : '$0.00'}
+                      {usdPriceLoading && 'Loading USD price...'}
+                      {usdPriceError && <span className="text-red-400">{usdPriceError}</span>}
+                      {!usdPriceLoading && !usdPriceError && (
+                        <>
+                          ≈ {formData.amount && usdPrice !== null
+                            ? formatFiat(parseFloat(formData.amount) * usdPrice)
+                            : '$0.00'}
+                        </>
+                      )}
                     </div>
                   </div>
                   
@@ -376,7 +413,7 @@ export const CreateInvoicePage: React.FC<CreateInvoicePageProps> = ({ onBack, on
                       {feeError && <span className="text-red-400">{feeError}</span>}
                       {!feeLoading && !feeError && networkFee && (
                         <>
-                          {networkFee.eth.toFixed(6)} ETH (~{formatFiat(networkFee.usd)})
+                          {networkFee.fee.toFixed(6)} {networkFee.asset} (~{formatFiat(networkFee.usd)})
                         </>
                       )}
                     </div>

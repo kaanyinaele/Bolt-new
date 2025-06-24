@@ -53,32 +53,91 @@ export const formatFiat = (amount: number): string => {
  * Fetches the current Ethereum gas price (in gwei) from Etherscan and ETH/USD price from CoinGecko.
  * Returns an estimate of the network fee for a standard ETH transfer (21,000 gas) in ETH and USD.
  */
-export const fetchNetworkFeeEstimate = async (): Promise<{ eth: number; usd: number } | null> => {
+export type NetworkFeeEstimate = {
+  asset: string; // e.g. 'MATIC', 'ETH'
+  fee: number;   // in asset
+  usd: number;   // in USD
+};
+
+/**
+ * Fetches the current network fee estimate for Polygon (MATIC, USDT, USDC) or Ethereum (ETH).
+ * - For Polygon: Uses Polygon Gas Station and CoinGecko for MATIC/USD.
+ * - For Ethereum: Uses Etherscan and CoinGecko for ETH/USD.
+ *
+ * @param currency 'MATIC' | 'USDT' | 'USDC' | 'ETH'
+ * @param network 'polygon' | 'ethereum'
+ * @returns { asset, fee, usd } or null if error
+ */
+/**
+ * Fetch the current USD price for a given crypto (BTC, ETH, USDT, USDC, MATIC) using CoinGecko.
+ * @param currency Symbol (e.g. 'BTC', 'ETH', 'USDT', 'USDC', 'MATIC')
+ * @returns price in USD as a number
+ */
+export const fetchCryptoUsdPrice = async (currency: 'BTC' | 'ETH' | 'USDT' | 'USDC' | 'MATIC'): Promise<number | null> => {
   try {
-    const apiKey = import.meta.env.VITE_ETHERSCAN_API_KEY;
-    if (!apiKey) throw new Error('Missing VITE_ETHERSCAN_API_KEY');
+    const idMap: Record<string, string> = {
+      BTC: 'bitcoin',
+      ETH: 'ethereum',
+      USDT: 'tether',
+      USDC: 'usd-coin',
+      MATIC: 'matic-network',
+    };
+    const id = idMap[currency];
+    if (!id) return null;
+    const url = `https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data?.[id]?.usd ?? null;
+  } catch (err) {
+    console.error('Failed to fetch crypto USD price:', err);
+    return null;
+  }
+};
 
-    // 1. Fetch current gas price from Etherscan (returns in wei)
-    const gasRes = await fetch(
-      `https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=${apiKey}`
-    );
-    const gasData = await gasRes.json();
-    const gasPriceGwei = parseFloat(gasData?.result?.ProposeGasPrice);
-    if (isNaN(gasPriceGwei)) throw new Error('Invalid gas price');
-
-    // 2. Fetch current ETH/USD price from CoinGecko
-    const priceRes = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd'
-    );
-    const priceData = await priceRes.json();
-    const ethUsd = priceData?.ethereum?.usd;
-    if (!ethUsd) throw new Error('Invalid ETH/USD price');
-
-    // 3. Estimate fee: gasPrice (gwei) * gasLimit (21,000) = total gwei
-    const gasLimit = 21000;
-    const feeEth = (gasPriceGwei * gasLimit) / 1e9; // gwei to ETH
-    const feeUsd = feeEth * ethUsd;
-    return { eth: feeEth, usd: feeUsd };
+export const fetchNetworkFeeEstimate = async (
+  currency: 'MATIC' | 'USDT' | 'USDC' | 'ETH',
+  network: 'polygon' | 'ethereum' = 'polygon'
+): Promise<NetworkFeeEstimate | null> => {
+  try {
+    if (network === 'polygon') {
+      // 1. Fetch gas price from Polygon Gas Station (gwei)
+      const gasRes = await fetch('https://gasstation.polygon.technology/v2');
+      const gasData = await gasRes.json();
+      // Use 'standard' gas price (gwei)
+      const gasPriceGwei = gasData?.standard?.maxFee;
+      if (!gasPriceGwei || isNaN(gasPriceGwei)) throw new Error('Invalid Polygon gas price');
+      // 2. Fetch MATIC/USD price
+      const priceRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=usd');
+      const priceData = await priceRes.json();
+      const maticUsd = priceData?.['matic-network']?.usd;
+      if (!maticUsd) throw new Error('Invalid MATIC/USD price');
+      // 3. Gas limit: 21,000 for MATIC, 60,000 for USDT/USDC
+      const gasLimit = currency === 'MATIC' ? 21000 : 60000;
+      const feeMatic = (gasPriceGwei * gasLimit) / 1e9; // gwei to MATIC
+      const feeUsd = feeMatic * maticUsd;
+      return { asset: 'MATIC', fee: feeMatic, usd: feeUsd };
+    } else if (network === 'ethereum') {
+      // ETH/ERC-20 on Ethereum (legacy fallback)
+      const apiKey = import.meta.env.VITE_ETHERSCAN_API_KEY;
+      if (!apiKey) throw new Error('Missing VITE_ETHERSCAN_API_KEY');
+      const gasRes = await fetch(
+        `https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=${apiKey}`
+      );
+      const gasData = await gasRes.json();
+      const gasPriceGwei = parseFloat(gasData?.result?.ProposeGasPrice);
+      if (isNaN(gasPriceGwei)) throw new Error('Invalid gas price');
+      const priceRes = await fetch(
+        'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd'
+      );
+      const priceData = await priceRes.json();
+      const ethUsd = priceData?.ethereum?.usd;
+      if (!ethUsd) throw new Error('Invalid ETH/USD price');
+      const gasLimit = currency === 'ETH' ? 21000 : 60000;
+      const feeEth = (gasPriceGwei * gasLimit) / 1e9;
+      const feeUsd = feeEth * ethUsd;
+      return { asset: 'ETH', fee: feeEth, usd: feeUsd };
+    }
+    return null;
   } catch (err) {
     console.error('Failed to fetch network fee estimate:', err);
     return null;
