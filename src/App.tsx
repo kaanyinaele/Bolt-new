@@ -48,39 +48,46 @@ function App() {
 
   // Check for an existing connection and handle account changes
   useEffect(() => {
-    const init = async () => {
-      if (window.ethereum) {
-        const web3Provider = new ethers.providers.Web3Provider(window.ethereum);
-        const accounts = await web3Provider.listAccounts();
-        if (accounts.length > 0) {
-          const web3Signer = web3Provider.getSigner();
-          setProvider(web3Provider);
-          setSigner(web3Signer);
-          setAccount(accounts[0]);
-          setCurrentPage('dashboard');
-        }
-        setIsLoading(false);
+    const handleAccountsChanged = (accounts: string[]) => {
+      if (accounts.length > 0) {
+        // The window.ethereum check is done before this listener is attached
+        const web3Provider = new ethers.providers.Web3Provider(window.ethereum as any);
+        const web3Signer = web3Provider.getSigner();
+        setProvider(web3Provider);
+        setSigner(web3Signer);
+        setAccount(accounts[0]);
+      } else {
+        setAccount(null);
+        setSigner(null);
+        setProvider(null);
+      }
+    };
 
-        // Listen for account changes
-        window.ethereum.on('accountsChanged', (accounts: string[]) => {
+    const init = async () => {
+      try {
+        if (window.ethereum) {
+          const web3Provider = new ethers.providers.Web3Provider(window.ethereum as any);
+          const accounts = await web3Provider.listAccounts();
           if (accounts.length > 0) {
-            setAccount(accounts[0]);
-          } else {
-            // Handle disconnection
-            setAccount(null);
-            setSigner(null);
-            setProvider(null);
+            handleAccountsChanged(accounts);
+            setCurrentPage('dashboard');
           }
-        });
+          // Cast to any to access the 'on' method
+          (window.ethereum as any).on('accountsChanged', handleAccountsChanged);
+        }
+      } catch (error) {
+        console.error('Error during wallet initialization:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     init();
 
-    // Clean up the event listener
     return () => {
-      if (window.ethereum?.removeListener) {
-        window.ethereum.removeListener('accountsChanged', () => {});
+      // Cast to any to access the 'removeListener' method
+      if ((window.ethereum as any)?.removeListener) {
+        (window.ethereum as any).removeListener('accountsChanged', handleAccountsChanged);
       }
     };
   }, []);

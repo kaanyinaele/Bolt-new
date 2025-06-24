@@ -8,6 +8,15 @@ interface ConnectWalletPageProps {
 export const ConnectWalletPage: React.FC<ConnectWalletPageProps> = ({ onConnect }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [providerFound, setProviderFound] = useState<boolean | null>(null);
+
+  React.useEffect(() => {
+    // Use a timeout to ensure wallet-injected scripts have loaded
+    const timer = setTimeout(() => {
+      setProviderFound(typeof window.ethereum !== 'undefined');
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleConnect = async () => {
     setIsLoading(true);
@@ -83,7 +92,7 @@ export const ConnectWalletPage: React.FC<ConnectWalletPageProps> = ({ onConnect 
             <div className="px-8 pb-8">
               <button
                 onClick={handleConnect}
-                disabled={isLoading}
+                disabled={isLoading || providerFound === false}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 className={`
@@ -97,8 +106,11 @@ export const ConnectWalletPage: React.FC<ConnectWalletPageProps> = ({ onConnect 
                 `}
               >
                 <span className="relative z-10 flex items-center justify-center space-x-2">
-                  <Wallet className={`h-5 w-5 ${isLoading ? 'animate-pulse' : ''}`} />
-                  <span>{isLoading ? 'Connecting...' : 'Connect Wallet'}</span>
+                  <Wallet className={`h-5 w-5 ${isLoading && providerFound ? 'animate-pulse' : ''}`} />
+                  <span>
+                    {isLoading && providerFound ? 'Connecting...' : 
+                     providerFound === false ? 'Wallet Not Found' : 'Connect Wallet'}
+                  </span>
                   <ArrowRight 
                     className={`h-4 w-4 transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`} 
                   />
@@ -107,6 +119,9 @@ export const ConnectWalletPage: React.FC<ConnectWalletPageProps> = ({ onConnect 
               </button>
 
               <p className="mt-4 text-center text-xs text-gray-400">
+                {providerFound === false && (
+                  <span className="text-red-400 block mb-2">Please install a Web3 wallet like MetaMask or use a dApp browser.</span>
+                )}
                 By connecting, you agree to our Terms of Service and Privacy Policy
               </p>
             </div>
