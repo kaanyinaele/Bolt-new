@@ -62,8 +62,8 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <div className="absolute -top-1/4 -left-1/4 w-[150%] h-[150%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary-500/5 via-transparent to-transparent animate-spin-slow" />
       </div>
 
-      {/* Floating badge */}
-      <div className="fixed bottom-6 left-6 z-50">
+      {/* Floating badge - hidden on mobile */}
+      <div className="fixed bottom-6 left-6 z-50 hidden md:block">
         <FloatingBadge />
       </div>
 

@@ -123,8 +123,25 @@ function App() {
   // Main layout container with fixed badge
   const Layout: React.FC<{children: React.ReactNode}> = ({ children }) => (
     <div className="relative min-h-screen bg-gray-50">
-      {children}
-      
+      {/* Placeholder for a badge, hidden on mobile */}
+      <div className="absolute top-6 right-6 z-50 hidden md:block">
+        {/* Future badge can go here */}
+      </div>
+      <main className="flex-grow">{children}</main>
+      <footer className="w-full bg-dark-950 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <a
+            href="https://bolt.new/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center space-x-2 text-sm text-gray-400 hover:text-white transition-colors"
+          >
+            <span>Made with</span>
+            <img src="/black_circle_360x360 copy.png" alt="Bolt Logo" className="h-5 w-5" />
+            <span>Bolt</span>
+          </a>
+        </div>
+      </footer>
     </div>
   );
 

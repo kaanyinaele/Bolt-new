@@ -428,8 +428,8 @@ export const CreateInvoicePage: React.FC<CreateInvoicePageProps> = ({ onBack, on
         </div> {/* This closes the bg-gray-800/50 div */}
       </div> {/* This closes the max-w-4xl div */}
       
-      {/* Floating Badge */}
-      <div className="fixed bottom-6 right-6 z-50">
+      {/* Floating Badge - hidden on mobile */}
+      <div className="fixed bottom-6 right-6 z-50 hidden md:block">
         <FloatingBadge />
       </div>
     </div>

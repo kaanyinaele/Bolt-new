@@ -35,8 +35,8 @@ export const ConnectWalletPage: React.FC<ConnectWalletPageProps> = ({ onConnect 
         <div className="absolute -top-1/2 -right-1/2 w-[200%] h-[200%] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-secondary-500/10 via-transparent to-transparent animate-spin-slow animation-delay-3000" />
       </div>
 
-      {/* Badge in top-right corner */}
-      <div className="absolute top-6 right-6 z-50">
+      {/* Badge in top-right corner - hidden on mobile */}
+      <div className="absolute top-6 right-6 z-50 hidden md:block">
         <a 
           href="https://bolt.new/" 
           target="_blank" 
@@ -128,18 +128,30 @@ export const ConnectWalletPage: React.FC<ConnectWalletPageProps> = ({ onConnect 
           </div>
 
           {/* Footer */}
-          <div className="mt-8 text-center">
-            <p className="text-sm text-gray-400">
-              New to Web3?{' '}
-              <a 
-                href="https://ethereum.org/en/wallets/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary-300 hover:text-primary-200 font-medium transition-colors"
-              >
-                Learn about wallets
-              </a>
-            </p>
+          <div className="absolute bottom-0 left-0 right-0 py-4">
+            <div className="text-center mb-4">
+              <p className="text-sm text-gray-400">
+                New to Web3?{' '}
+                <a 
+                  href="https://ethereum.org/en/wallets/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary-300 hover:text-primary-200 font-medium transition-colors"
+                >
+                  Learn about wallets
+                </a>
+              </p>
+            </div>
+            <a
+              href="https://bolt.new/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center space-x-2 text-sm text-gray-400 hover:text-white transition-colors"
+            >
+              <span>Made with</span>
+              <img src="/black_circle_360x360 copy.png" alt="Bolt Logo" className="h-5 w-5" />
+              <span>Bolt</span>
+            </a>
           </div>
         </div>
       </div>
