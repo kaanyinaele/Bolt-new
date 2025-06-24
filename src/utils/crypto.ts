@@ -49,6 +49,42 @@ export const formatFiat = (amount: number): string => {
   }).format(amount);
 };
 
+/**
+ * Fetches the current Ethereum gas price (in gwei) from Etherscan and ETH/USD price from CoinGecko.
+ * Returns an estimate of the network fee for a standard ETH transfer (21,000 gas) in ETH and USD.
+ */
+export const fetchNetworkFeeEstimate = async (): Promise<{ eth: number; usd: number } | null> => {
+  try {
+    const apiKey = import.meta.env.VITE_ETHERSCAN_API_KEY;
+    if (!apiKey) throw new Error('Missing VITE_ETHERSCAN_API_KEY');
+
+    // 1. Fetch current gas price from Etherscan (returns in wei)
+    const gasRes = await fetch(
+      `https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=${apiKey}`
+    );
+    const gasData = await gasRes.json();
+    const gasPriceGwei = parseFloat(gasData?.result?.ProposeGasPrice);
+    if (isNaN(gasPriceGwei)) throw new Error('Invalid gas price');
+
+    // 2. Fetch current ETH/USD price from CoinGecko
+    const priceRes = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd'
+    );
+    const priceData = await priceRes.json();
+    const ethUsd = priceData?.ethereum?.usd;
+    if (!ethUsd) throw new Error('Invalid ETH/USD price');
+
+    // 3. Estimate fee: gasPrice (gwei) * gasLimit (21,000) = total gwei
+    const gasLimit = 21000;
+    const feeEth = (gasPriceGwei * gasLimit) / 1e9; // gwei to ETH
+    const feeUsd = feeEth * ethUsd;
+    return { eth: feeEth, usd: feeUsd };
+  } catch (err) {
+    console.error('Failed to fetch network fee estimate:', err);
+    return null;
+  }
+};
+
 export const calculateNextInvoiceDate = (frequency: string, lastDate: string): string => {
   const date = new Date(lastDate);
   
