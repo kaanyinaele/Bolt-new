@@ -1,13 +1,64 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>InvoiceFlow - Crypto Invoice Generator</title>
-    <meta name="description" content="Professional crypto invoice generator for freelancers. Create, manage, and track cryptocurrency payment requests with QR codes and shareable links.">
+    <title>RubikconInvoice - Web3 Invoicing Platform</title>
+    <meta name="description" content="Decentralized invoicing solution built on blockchain. Create, manage, and track invoices with crypto payments in a trustless environment.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#0f172a">
+    
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://rubikcon.invoice/">
+    <meta property="og:title" content="RubikconInvoice - Web3 Invoicing Platform">
+    <meta property="og:description" content="Decentralized invoicing solution built on blockchain. Create, manage, and track invoices with crypto payments in a trustless environment.">
+    <meta property="og:image" content="/og-image.jpg">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://rubikcon.invoice/">
+    <meta property="twitter:title" content="RubikconInvoice - Web3 Invoicing Platform">
+    <meta property="twitter:description" content="Decentralized invoicing solution built on blockchain. Create, manage, and track invoices with crypto payments in a trustless environment.">
+    <meta property="twitter:image" content="/og-image.jpg">
+    
+    <style>
+      @keyframes spin-slow {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      .animate-spin-slow {
+        animation: spin-slow 20s linear infinite;
+      }
+      .animation-delay-3000 {
+        animation-delay: 3s;
+      }
+      /* Smooth scrolling */
+      html {
+        scroll-behavior: smooth;
+      }
+      /* Hide scrollbar but keep functionality */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
   </head>
-  <body>
+  <body class="antialiased text-gray-100 bg-dark-900 font-sans">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
