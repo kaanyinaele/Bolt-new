@@ -77,7 +77,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               </div>
               <div>
                 <h1 className="text-xl font-bold bg-gradient-to-r from-white to-primary-200 bg-clip-text text-transparent">
-                  RubikconInvoice
+                  InvoyBox
                 </h1>
                 <div className="flex items-center space-x-1">
                   <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
@@ -314,7 +314,9 @@ const InvoiceRow: React.FC<InvoiceRowProps> = ({ invoice, onViewInvoice }) => {
             <DocumentText className="h-4 w-4 text-primary-400" />
           </div>
           <div>
-            <div className="text-sm font-medium text-white">INV-{invoice.id.slice(0, 6).toUpperCase()}</div>
+            <div className="text-sm font-medium text-white">
+              {invoice?.id ? `INV-${String(invoice.id).substring(0, 8).toUpperCase()}` : 'INV-UNKNOWN'}
+            </div>
             <div className="text-xs text-gray-400">{new Date(invoice.createdAt).toLocaleDateString()}</div>
           </div>
         </div>

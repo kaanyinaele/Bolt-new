@@ -48,29 +48,29 @@ export const InvoiceDetailPage: React.FC<InvoiceDetailPageProps> = ({ invoice, o
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 relative">
+    <div className="min-h-screen bg-gradient-to-br from-dark-900 to-dark-950 text-gray-300 relative">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <header className="bg-dark-900/50 backdrop-blur-sm border-b border-white/10 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button
               onClick={onBack}
-              className="text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-gray-400 hover:text-white transition-colors"
             >
               <ArrowLeft className="h-6 w-6" />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Invoice Details</h1>
-              <p className="text-sm text-gray-600">#{invoice.id.slice(-8)}</p>
+              <h1 className="text-xl font-bold text-white">Invoice Details</h1>
+              <p className="text-sm text-gray-400">#{String(invoice.id || '').substring(0, 8)}</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
             <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-              invoice.status === 'Paid' 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-amber-100 text-amber-800'
+              invoice.status === 'Funded' || invoice.status === 'Completed'
+                ? 'bg-green-500/20 text-green-300'
+                : 'bg-amber-500/20 text-amber-300'
             }`}>
-              {invoice.status === 'Paid' ? (
+              {invoice.status === 'Funded' || invoice.status === 'Completed' ? (
                 <CheckCircle className="h-4 w-4 mr-1" />
               ) : (
                 <Calendar className="h-4 w-4 mr-1" />
@@ -86,57 +86,57 @@ export const InvoiceDetailPage: React.FC<InvoiceDetailPageProps> = ({ invoice, o
           {/* Left Column - Invoice Details */}
           <div className="space-y-6">
             {/* Invoice Info Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Invoice Information</h2>
+            <div className="bg-dark-800/50 backdrop-blur-md border border-white/10 rounded-xl p-6">
+              <h2 className="text-lg font-semibold text-white mb-4">Invoice Information</h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Job Description</label>
-                  <p className="text-gray-900 font-medium">{invoice.jobDescription}</p>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Job Description</label>
+                  <p className="text-white font-medium">{invoice.jobDescription}</p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">Amount</label>
-                    <p className="text-xl font-bold text-gray-900">
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Amount</label>
+                    <p className="text-xl font-bold text-white">
                       {formatCurrency(invoice.amount, invoice.currency)}
                     </p>
-                    <p className="text-sm text-gray-600">{formatFiat(invoice.fiatEquivalent)}</p>
+                    <p className="text-sm text-gray-400">{formatFiat(invoice.fiatEquivalent)}</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">Due Date</label>
-                    <p className="text-gray-900">{new Date(invoice.dueDate).toLocaleDateString()}</p>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Due Date</label>
+                    <p className="text-white">{new Date(invoice.dueDate).toLocaleDateString()}</p>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Created</label>
-                  <p className="text-gray-900">{new Date(invoice.createdAt).toLocaleDateString()}</p>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Created</label>
+                  <p className="text-white">{new Date(invoice.createdAt).toLocaleDateString()}</p>
                 </div>
 
                 {invoice.customNotes && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">Notes</label>
-                    <p className="text-gray-900 bg-gray-50 rounded-lg p-3">{invoice.customNotes}</p>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Notes</label>
+                    <p className="text-gray-200 bg-dark-900/70 rounded-lg p-3">{invoice.customNotes}</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Wallet Address Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <div className="bg-dark-800/50 backdrop-blur-md border border-white/10 rounded-xl p-6">
+              <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
                 <Wallet className="h-5 w-5 mr-2" />
                 Payment Address
               </h2>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-600 mb-2">Send {invoice.currency} to:</p>
-                <div className="flex items-center justify-between bg-white rounded-lg p-3 border">
-                  <p className="font-mono text-sm text-gray-900 break-all mr-2">
+              <div className="bg-dark-900/70 rounded-lg p-4">
+                <p className="text-sm text-gray-400 mb-2">Send {invoice.currency} to:</p>
+                <div className="flex items-center justify-between bg-dark-950 rounded-lg p-3 border border-white/10">
+                  <p className="font-mono text-sm text-primary-200 break-all mr-2">
                     {invoice.walletAddress}
                   </p>
                   <button
                     onClick={() => copyToClipboard(invoice.walletAddress, 'Wallet address')}
-                    className="bg-blue-100 hover:bg-blue-200 text-blue-700 p-2 rounded-lg transition-colors flex-shrink-0"
+                    className="bg-primary-500/20 hover:bg-primary-500/30 text-primary-300 p-2 rounded-lg transition-colors flex-shrink-0"
                     title="Copy wallet address"
                   >
                     <Copy className="h-4 w-4" />
@@ -149,43 +149,43 @@ export const InvoiceDetailPage: React.FC<InvoiceDetailPageProps> = ({ invoice, o
           {/* Right Column - QR Code & Actions */}
           <div className="space-y-6">
             {/* QR Code Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <div className="bg-dark-800/50 backdrop-blur-md border border-white/10 rounded-xl p-6">
+              <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
                 <QrCode className="h-5 w-5 mr-2" />
                 Payment QR Code
               </h2>
               <div className="text-center">
                 {qrCodeUrl ? (
-                  <div className="inline-block p-4 bg-white rounded-xl border-2 border-gray-200">
+                  <div className="inline-block p-4 bg-white rounded-xl border-2 border-primary-500/50">
                     <img src={qrCodeUrl} alt="Payment QR Code" className="w-48 h-48" />
                   </div>
                 ) : (
-                  <div className="w-48 h-48 bg-gray-100 rounded-xl flex items-center justify-center mx-auto">
-                    <QrCode className="h-12 w-12 text-gray-400" />
+                  <div className="w-48 h-48 bg-gray-700 rounded-xl flex items-center justify-center mx-auto">
+                    <QrCode className="h-12 w-12 text-gray-500" />
                   </div>
                 )}
-                <p className="text-sm text-gray-600 mt-3">
+                <p className="text-sm text-gray-400 mt-3">
                   Scan with your crypto wallet to pay
                 </p>
               </div>
             </div>
 
             {/* Shareable Link Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <div className="bg-dark-800/50 backdrop-blur-md border border-white/10 rounded-xl p-6">
+              <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
                 <ExternalLink className="h-5 w-5 mr-2" />
                 Shareable Payment Link
               </h2>
               <div className="space-y-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-2">Send this link to your client:</p>
-                  <div className="flex items-center justify-between bg-white rounded-lg p-3 border">
-                    <p className="text-sm text-gray-900 break-all mr-2">
+                <div className="bg-dark-900/70 rounded-lg p-4">
+                  <p className="text-sm text-gray-400 mb-2">Send this link to your client:</p>
+                  <div className="flex items-center justify-between bg-dark-950 rounded-lg p-3 border border-white/10">
+                    <p className="text-sm text-primary-200 break-all mr-2">
                       {shareableLink}
                     </p>
                     <button
                       onClick={() => copyToClipboard(shareableLink, 'Payment link')}
-                      className="bg-blue-100 hover:bg-blue-200 text-blue-700 p-2 rounded-lg transition-colors flex-shrink-0"
+                      className="bg-primary-500/20 hover:bg-primary-500/30 text-primary-300 p-2 rounded-lg transition-colors flex-shrink-0"
                       title="Copy payment link"
                     >
                       <Copy className="h-4 w-4" />
@@ -195,7 +195,7 @@ export const InvoiceDetailPage: React.FC<InvoiceDetailPageProps> = ({ invoice, o
 
                 <button
                   onClick={() => window.open(shareableLink, '_blank')}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  className="w-full bg-gradient-to-r from-primary-500 to-secondary-600 hover:opacity-90 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
                 >
                   <ExternalLink className="h-5 w-5" />
                   <span>Preview Client View</span>
@@ -205,8 +205,8 @@ export const InvoiceDetailPage: React.FC<InvoiceDetailPageProps> = ({ invoice, o
 
             {/* Copy Feedback */}
             {copyFeedback && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <p className="text-green-700 text-sm font-medium flex items-center">
+              <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-3">
+                <p className="text-green-300 text-sm font-medium flex items-center">
                   <CheckCircle className="h-4 w-4 mr-2" />
                   {copyFeedback}
                 </p>
