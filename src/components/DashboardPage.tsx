@@ -74,12 +74,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
-              <div className="bg-gradient-to-br from-primary-500 to-secondary-600 rounded-xl p-2 shadow-lg">
-                <Coins className="h-6 w-6 text-white" />
+              <div className="rounded-xl overflow-hidden">
+                <img src="/logo.png" alt="Logo" className="h-10 w-auto" />
               </div>
               <div>
                 <h1 className="text-xl font-bold bg-gradient-to-r from-white to-primary-200 bg-clip-text text-transparent">
-                  InvoyBox
+                  Bolt
                 </h1>
                 <div className="flex items-center space-x-1">
                   <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
