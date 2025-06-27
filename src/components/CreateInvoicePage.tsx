@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { ArrowLeft, Save, Wallet, FileText, Clock, AlertCircle, Check, X, ArrowRight } from 'lucide-react';
 import { Invoice } from '../types/invoice';
 import { FloatingBadge } from './FloatingBadge';
-import { generateInvoiceId, getMockFiatEquivalent, formatFiat, fetchNetworkFeeEstimate } from '../utils/crypto';
+import { formatFiat, fetchNetworkFeeEstimate } from '../utils/crypto';
 
 interface CreateInvoicePageProps {
   onBack: () => void;
-  onSave: (invoice: Invoice) => void;
+  onSave: (invoice: Omit<Invoice, 'id' | 'status' | 'createdAt'>) => void;
 }
 
 export const CreateInvoicePage: React.FC<CreateInvoicePageProps> = ({ onBack, onSave }) => {
@@ -64,6 +64,7 @@ export const CreateInvoicePage: React.FC<CreateInvoicePageProps> = ({ onBack, on
         }
       })
       .catch(err => {
+        console.error('Failed to fetch network fee:', err);
         if (mounted) {
           setFeeError('Could not fetch network fee');
           setFeeLoading(false);
@@ -101,18 +102,18 @@ export const CreateInvoicePage: React.FC<CreateInvoicePageProps> = ({ onBack, on
       return;
     }
 
-    const amount = parseFloat(formData.amount);
-    const invoice: Invoice = {
-      id: generateInvoiceId(),
-      amount,
+    const invoice: Omit<Invoice, 'id' | 'status' | 'createdAt'> = {
+      clientName: 'Mock Client', // Placeholder
+      clientEmail: 'mock@example.com', // Placeholder
+      amount: parseFloat(formData.amount),
       currency: formData.currency,
+      cryptoAmount: formData.amount, // Assuming crypto amount is same as fiat for now
+      cryptoCurrency: formData.currency,
       jobDescription: formData.jobDescription,
       walletAddress: formData.walletAddress,
       dueDate: formData.dueDate,
       customNotes: formData.customNotes,
-      status: 'Pending Payment',
-      createdAt: new Date().toISOString(),
-      fiatEquivalent: getMockFiatEquivalent(formData.currency, amount)
+      fiatEquivalent: usdPrice ? parseFloat(formData.amount) : 0, // Use fetched USD price
     };
 
     onSave(invoice);

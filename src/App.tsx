@@ -4,7 +4,10 @@ import { DashboardPage } from './components/DashboardPage';
 import { CreateInvoicePage } from './components/CreateInvoicePage';
 import { InvoiceDetailPage } from './components/InvoiceDetailPage';
 import { ConnectWalletPage } from './components/ConnectWalletPage';
+import { LoadingScreen } from './components/LoadingScreen';
+import { PublicInvoicePage } from './components/PublicInvoicePage';
 import { Invoice } from './types/invoice';
+import { supabase } from './supabaseClient';
 
 // Define AppState for page navigation
 type AppState = 'dashboard' | 'create' | 'detail';
@@ -19,6 +22,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState<AppState>('dashboard');
   const [invoices, setInvoices] = useState<Invoice[]>([]); // This will be populated from the blockchain
   const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null);
+  const [publicInvoice, setPublicInvoice] = useState<Invoice | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Connect to the user's wallet
@@ -50,7 +54,6 @@ function App() {
   useEffect(() => {
     const handleAccountsChanged = (accounts: string[]) => {
       if (accounts.length > 0) {
-        // The window.ethereum check is done before this listener is attached
         const web3Provider = new ethers.providers.Web3Provider(window.ethereum as any);
         const web3Signer = web3Provider.getSigner();
         setProvider(web3Provider);
@@ -63,7 +66,31 @@ function App() {
       }
     };
 
-    const init = async () => {
+    const initializeApp = async () => {
+      const path = window.location.hash;
+
+      // Fetch all invoices from Supabase
+      const { data: fetchedInvoices, error: fetchError } = await supabase
+        .from('invoices')
+        .select('*');
+
+      if (fetchError) {
+        console.error('Error fetching invoices:', fetchError);
+      } else if (fetchedInvoices) {
+        setInvoices(fetchedInvoices as Invoice[]);
+      }
+
+      if (path.startsWith('#/invoice/')) {
+        const invoiceId = path.split('/')[2];
+        const invoice = (fetchedInvoices || []).find(inv => inv.id === invoiceId);
+        if (invoice) {
+          setPublicInvoice(invoice as Invoice);
+        }
+        setIsLoading(false);
+        return; // Public route handled, stop further initialization.
+      }
+
+      // Not a public route, proceed with wallet initialization
       try {
         if (window.ethereum) {
           const web3Provider = new ethers.providers.Web3Provider(window.ethereum as any);
@@ -72,7 +99,6 @@ function App() {
             handleAccountsChanged(accounts);
             setCurrentPage('dashboard');
           }
-          // Cast to any to access the 'on' method
           (window.ethereum as any).on('accountsChanged', handleAccountsChanged);
         }
       } catch (error) {
@@ -82,10 +108,22 @@ function App() {
       }
     };
 
-    init();
+    const handleHashChange = () => {
+      const path = window.location.hash;
+      if (path.startsWith('#/invoice/')) {
+        const invoiceId = path.split('/')[2];
+        const invoice = invoices.find(inv => inv.id === invoiceId);
+        setPublicInvoice(invoice || null);
+      } else {
+        setPublicInvoice(null);
+      }
+    };
+
+    initializeApp();
+    window.addEventListener('hashchange', handleHashChange);
 
     return () => {
-      // Cast to any to access the 'removeListener' method
+      window.removeEventListener('hashchange', handleHashChange);
       if ((window.ethereum as any)?.removeListener) {
         (window.ethereum as any).removeListener('accountsChanged', handleAccountsChanged);
       }
@@ -98,17 +136,19 @@ function App() {
     setCurrentPage('create');
   };
 
-  const handleSaveInvoice = (newInvoice: Omit<Invoice, 'id' | 'status'>) => {
-    console.log('Deploying new invoice contract:', newInvoice);
-    // This is where the ethers.js logic to deploy the contract will go.
-    // For now, we'll mock it.
-    const mockInvoice: Invoice = {
-      id: `0x${Date.now().toString(16)}`, // Mock contract address
-      ...newInvoice,
-      status: 'Created',
-    };
-    setInvoices(prev => [...prev, mockInvoice]);
-    setCurrentPage('dashboard');
+  const handleSaveInvoice = async (newInvoice: Omit<Invoice, 'id' | 'status' | 'createdAt'>) => {
+    const { data, error } = await supabase
+      .from('invoices')
+      .insert({ ...newInvoice, status: 'Created' })
+      .select();
+
+    if (error) {
+      console.error('Error creating invoice:', error);
+      // Optionally, show an error message to the user
+    } else if (data) {
+      setInvoices(currentInvoices => [...currentInvoices, ...data as Invoice[]]);
+      setCurrentPage('dashboard');
+    }
   };
 
   const handleViewInvoice = (invoice: Invoice) => {
@@ -145,8 +185,13 @@ function App() {
     </div>
   );
 
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (isLoading && !publicInvoice) {
+    return <LoadingScreen />;
+  }
+
+  // Render public invoice view if the URL matches
+  if (publicInvoice) {
+    return <PublicInvoicePage invoice={publicInvoice} />;
   }
 
   if (!account) {

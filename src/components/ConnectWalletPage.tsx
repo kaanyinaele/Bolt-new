@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Coins, Wallet, ArrowRight, Zap, Shield } from 'lucide-react';
+import { Wallet, ArrowRight, Zap, Shield } from 'lucide-react';
 
 interface ConnectWalletPageProps {
   onConnect: () => Promise<void>;
@@ -56,11 +56,11 @@ export const ConnectWalletPage: React.FC<ConnectWalletPageProps> = ({ onConnect 
           <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
             {/* Header */}
             <div className="p-8 text-center">
-              <div className="mx-auto flex items-center justify-center h-20 w-20 rounded-2xl bg-gradient-to-br from-primary-500 to-secondary-600 mb-6 shadow-lg">
-                <Coins className="h-10 w-10 text-white" />
+              <div className="flex justify-center mb-6 rounded-2xl">
+                <img src="/logo.png" alt="Rubikcon Logo" className="h-20 w-auto rounded-2xl" />
               </div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-primary-200 bg-clip-text text-transparent mb-3">
-                RubikconInvoice
+                InvoyBox
               </h1>
               <p className="text-gray-300 text-sm">
                 The decentralized solution for trustless invoicing on the blockchain
