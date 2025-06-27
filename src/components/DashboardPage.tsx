@@ -42,17 +42,19 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'created' | 'funded' | 'completed' | 'cancelled'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredInvoices = invoices.filter(invoice => {
+    // Filter by active tab
+    const matchesTab = activeTab === 'all' || 
+      invoice.status.toLowerCase() === activeTab;
+      
+    // Filter by search query
     const matchesSearch = searchQuery === '' || 
-      invoice.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      invoice.clientEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      invoice.id.toLowerCase().includes(searchQuery.toLowerCase());
+      (invoice.clientEmail && invoice.clientEmail.toLowerCase().includes(searchQuery.toLowerCase()));
     
-    if (activeTab === 'all') return matchesSearch;
-    return matchesSearch && invoice.status.toLowerCase() === activeTab.toLowerCase();
+    return matchesTab && matchesSearch;
   });
 
   return (
@@ -159,26 +161,44 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-700 mb-6">
-          <nav className="-mb-px flex space-x-8">
-            {['All', 'Created', 'Funded', 'Completed', 'Cancelled'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab.toLowerCase())}
-                className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tab.toLowerCase()
-                    ? 'border-primary-500 text-primary-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-400'
-                }`}
-              >
-                {tab}
-                {tab === 'All' && (
-                  <span className="ml-2 bg-gray-700 text-gray-300 text-xs font-medium px-2 py-0.5 rounded-full">
-                    {invoices.length}
-                  </span>
-                )}
-              </button>
-            ))}
+        <div className="border-b border-gray-700 mb-6 relative z-10">
+          <div className="absolute inset-0 bg-red-500/10 pointer-events-none z-0" />
+          <nav className="-mb-px flex space-x-8 relative z-10">
+            {['All', 'Created', 'Funded', 'Completed', 'Cancelled'].map((tab) => {
+              const tabValue = tab.toLowerCase() as 'all' | 'created' | 'funded' | 'completed' | 'cancelled';
+              const isActive = activeTab === tabValue;
+              
+              return (
+                <div key={tab} className="relative">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setActiveTab(tabValue);
+                    }}
+                    onMouseDown={(e) => e.preventDefault()}
+                    className={`relative whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                      isActive
+                        ? 'border-primary-500 text-primary-400'
+                        : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-400'
+                    }`}
+                  >
+                    {tab}
+                    <span className={`ml-2 bg-gray-700 text-gray-300 text-xs font-medium px-2 py-0.5 rounded-full ${
+                      isActive ? 'bg-opacity-100' : 'bg-opacity-50'
+                    }`}>
+                      {tab === 'All' 
+                        ? invoices.length 
+                        : invoices.filter(i => i.status.toLowerCase() === tabValue).length}
+                    </span>
+                  </button>
+                  {isActive && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500" />
+                  )}
+                </div>
+              );
+            })}
           </nav>
         </div>
 
